@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"time"
 )
-
+type requestResult struct {
+		url string
+		status string
+	}
 
 var errRequestFailed = errors.New("Request failed")
 
@@ -29,17 +32,30 @@ func main() {
 	// 	fmt.Println(err)
 	// }
 	// var results = make(map[string]string) 
+	results := make(map[string]string)
+	c :=make(chan requestResult )	
+	
+	urls := []string {
+		"https://www.airbnb.com/",
+		"https://www.google.com/",
+		"https://amazon.com/",
+		"https://www.reddit.com/",
+		"https://soundcloud.com/",
+		"https://www.facebook.com/",
+		"https://instagram.com/",
+		"https://academy.nomadcoders.co/",
+	}
+	for _, url := range urls{
+		go hitURL(url, c)
+	}
+	for i:=0;i<len(urls); i++{
+		result := <-c
+		results[result.url] = result.status
+ 	}
+	for url, status := range results{
+		fmt.Println(url, status)
+	}
 
-	// urls := []string {
-	// 	"https://www.airbnb.com/",
-	// 	"https://www.google.com/",
-	// 	"https://amazon.com/",
-	// 	"https://www.reddit.com/",
-	// 	"https://soundcloud.com/",
-	// 	"https://www.facebook.com/",
-	// 	"https://instagram.com/",
-	// 	"https://academy.nomadcoders.co/",
-	// }
 	// for _,url := range urls{
 	// 	result := "OK"
 	// 	err := hitURL(url)
@@ -51,26 +67,34 @@ func main() {
 	// for url, result := range results{
 	// 	fmt.Println(url, result)
 	// }
-	c:= make(chan string)
-	people := [5]string {"A", "B", "C", "D", "E"}
-	for _, person := range people{
-		go isSexy(person, c)
-	}
-	for i:=0 ; i< len(people); i++{
-		fmt.Println(<-c)
-	}
+	// c:= make(chan string)
+	// people := [5]string {"A", "B", "C", "D", "E"}
+	// for _, person := range people{
+	// 	go isSexy(person, c)
+	// }
+	// for i:=0 ; i< len(people); i++{
+	// 	fmt.Println(<-c)
+	// }
 	// go sexyCount("GJ")
 	// go sexyCount("SH")
 	// time.Sleep(time.Second * 5)
 }
 
-func hitURL(url string) error{
-	fmt.Println("Checking:", url)
+// func hitURL(url string) error{
+// 	fmt.Println("Checking:", url)
+// 	resp, err := http.Get(url)
+// 	if err != nil|| resp.StatusCode >= 400{
+// 		return errRequestFailed
+// 	}
+// 	return nil
+// }
+func hitURL(url string, c chan <- requestResult){
 	resp, err := http.Get(url)
+	status := "OK"
 	if err != nil|| resp.StatusCode >= 400{
-		return errRequestFailed
+		status = "FAILED"
 	}
-	return nil
+	c <-requestResult{url:url, status: status}
 }
 
 func sexyCount(person string) {
